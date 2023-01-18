@@ -1,4 +1,8 @@
 # tile-stone
 isometric pygame project
 
-<img src="https://cdn.discordapp.com/attachments/1026853842287083545/1065026291675435028/tiles.gif" alt=""/>
+first test
+<img src="assets/gifs/tiles.gif" alt=""/>
+
+second test
+<img src="assets/gifs/tiles2.gif" alt=""/>
