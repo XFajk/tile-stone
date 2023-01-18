@@ -33,7 +33,7 @@ def main():
                 [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
                 [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]
 
-    tutorial = list(map(lambda arg1: list(map(lambda arg2: [arg2, random.randint(1, 10)/10], arg1)), tutorial))
+    tutorial = list(map(lambda arg1: list(map(lambda arg2: [arg2, random.randint(1, 10)/10, 0.05], arg1)), tutorial))
 
     # assets and objects
     tutorial_tile = pygame.image.load("assets/sprites/tutorial_tile.png").convert()
@@ -47,20 +47,6 @@ def main():
 
         keys = pygame.key.get_pressed()
 
-        if (time.perf_counter() - timer) > 0.5:
-            tutorial = [[2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]
-            tutorial = list(map(lambda arg1: list(map(lambda arg2: [arg2, random.randint(1, 10)/10], arg1)), tutorial))
-            timer = time.perf_counter()
 
         dt = time.perf_counter() - last_time
         dt *= 60
@@ -78,17 +64,17 @@ def main():
             x = 13
             for block in row:
                 if block[0] == 1:
+                    block[1] += block[2] * dt 
+                    if round(block[1], 2) >= 2:
+                        block[2] *= -1
+                    elif round(block[1], 2) <= -2:
+                        block[2] *= -1
                     display.blit(tutorial_tile, ((x * (BLOCK_VECTOR_X.x * BLOCK_SIZE / 2) - BLOCK_SIZE / 2) + (
                                 y * (BLOCK_VECTOR_Y.x * BLOCK_SIZE / 2) - BLOCK_SIZE / 2),
                                                  (x * (BLOCK_VECTOR_X.y * BLOCK_SIZE / 2) - BLOCK_SIZE / 2) + (
                                                              (y - block[1]) * (
                                                                  BLOCK_VECTOR_Y.y * BLOCK_SIZE / 2) - BLOCK_SIZE / 2)))
-                elif block[0] == 2:
-                    display.blit(tutorial_tile, ((x * (BLOCK_VECTOR_X.x * BLOCK_SIZE / 2) - BLOCK_SIZE / 2) + (
-                                y * (BLOCK_VECTOR_Y.x * BLOCK_SIZE / 2) - BLOCK_SIZE / 2),
-                                                 (x * (BLOCK_VECTOR_X.y * BLOCK_SIZE / 2) - BLOCK_SIZE / 2) + (
-                                                             y * (
-                                                                 BLOCK_VECTOR_Y.y * BLOCK_SIZE / 2) - BLOCK_SIZE / 2)))
+
                 x += 1
 
             y += 1
