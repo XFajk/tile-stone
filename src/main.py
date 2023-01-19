@@ -1,3 +1,4 @@
+import random
 import time
 import pygame
 from pygame.locals import *
@@ -21,7 +22,7 @@ def draw_block(display, x, y, block, height, sprite):
 def level_setup(level):
     for i, row in enumerate(level):
         for j, block in enumerate(row):
-            row[j] = [row[j], 270 + i * 15 * 5, -15]
+            row[j] = [row[j], 270 + random.randint(1, 20) * 15 * 5, -15]
             i += 1
 
     return level
@@ -90,16 +91,17 @@ def main():
                             block[1] = 0
                         block[1] -= block[2] * dt
 
-                if block[0] == 1:
-                    draw_block(display, x, y, block, 1, tutorial_tile)
-                if block[0] == 2:
-                    draw_block(display, x, y, block, 2, tutorial_tile)
-                if block[0] == 3:
-                    draw_block(display, x, y, block, 3, tutorial_tile)
-                if block[0] == 4:
-                    draw_block(display, x, y, block, 4, tutorial_tile)
-                else:
-                    draw_block(display, x, y, block, block[0], tutorial_tile)
+                match block[0]:
+                    case 1:
+                        draw_block(display, x, y, block, 1, tutorial_tile)
+                    case 2:
+                        draw_block(display, x, y, block, 2, tutorial_tile)
+                    case 3:
+                        draw_block(display, x, y, block, 3, tutorial_tile)
+                    case 4:
+                        draw_block(display, x, y, block, 4, tutorial_tile)
+                    case _:
+                        draw_block(display, x, y, block, block[0], tutorial_tile)
 
                 x += 1
 
@@ -115,7 +117,7 @@ def main():
         surf = pygame.transform.scale(display, (window.get_width(), window.get_height()))
         window.blit(surf, (0, 0))
 
-        pygame.display.set_caption(f"{round(clock.get_fps(), 2)}")
+        pygame.display.set_caption(f"{round(clock.get_fps(), 2 )}")
         clock.tick(144)
 
 
