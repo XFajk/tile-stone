@@ -48,10 +48,10 @@ def to_grid_cords(pos: pygame.Vector2):
     )
 
 
-def draw_block(display, x, y, block, sprite):
+def draw_block(display, x, y, block, sprite, y_offset=0.0):
     for i in range(block[4]):
         display.blit(sprite, ((x * (I_VEC.x * BS / 2) - BS / 2) + (y * (J_VEC.x * BS / 2)),
-                              (x * (I_VEC.y * BS / 2)) + ((y - i * 1.8 + block[3]) * (J_VEC.y * BS / 2)) + block[1]))
+                              (x * (I_VEC.y * BS / 2)) + ((y - i * 1.8 + block[3] + y_offset) * (J_VEC.y * BS / 2)) + block[1]))
 
 
 def level_setup(layout, height):
@@ -61,7 +61,10 @@ def level_setup(layout, height):
 
     for i, row in enumerate(layout):
         for j, block in enumerate(row):
-            row[j] = [int(row[j]), 270 + random.randint(1, 20) * 15 * 5, -15, 0.0, height[i][j]]
+            if int(row[j]) == 0:
+                row[j] = [int(row[j]), 270 + random.randint(1, 20) * 15 * 5, -15, 0.0, height[i][j], True]
+            else:
+                row[j] = [int(row[j]), 270 + random.randint(1, 20) * 15 * 5, -15, 0.0, height[i][j], False]
 
     return layout
 
@@ -89,6 +92,9 @@ def main():
     start_tile.set_colorkey((255, 255, 255))
     end_tile = pygame.image.load("assets/sprites/end_tile.png").convert()
     end_tile.set_colorkey((255, 255, 255))
+
+    player_img = pygame.image.load("assets/sprites/player/player_tile.png").convert()
+    player_img.set_colorkey((255, 255, 255))
 
     # main loop variables
     done = False
@@ -149,6 +155,9 @@ def main():
                         draw_block(display, x, y, block, tutorial_tile)
                     case _:
                         draw_block(display, x, y, block, tutorial_tile)
+
+                if block[5]:
+                    draw_block(display, x, y, block, player_img, -3.2)
 
                 x += 1
 
