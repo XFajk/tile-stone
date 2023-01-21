@@ -1,6 +1,8 @@
 import random
 import time
 import pygame
+import os
+import csv
 from pygame.locals import *
 
 pygame.init()
@@ -9,6 +11,16 @@ ZOOM = 2
 BS = 32
 I_VEC = pygame.Vector2(1, 0.5)
 J_VEC = pygame.Vector2(-1, 0.5)
+
+
+def read_csv(filename):
+    level = []
+    with open(os.path.join(filename)) as data:
+        data = csv.reader(data, delimiter=',')
+        for row in data:
+            level.append(list(row))
+
+    return level
 
 
 def invert_metrix(a, b, c, d):
@@ -36,19 +48,22 @@ def to_grid_cords(pos: pygame.Vector2):
     )
 
 
-def draw_block(display, x, y, block, height, sprite):
-    for i in range(height):
+def draw_block(display, x, y, block, sprite):
+    for i in range(block[4]):
         display.blit(sprite, ((x * (I_VEC.x * BS / 2) - BS / 2) + (y * (J_VEC.x * BS / 2)),
                               (x * (I_VEC.y * BS / 2)) + ((y - i * 1.8 + block[3]) * (J_VEC.y * BS / 2)) + block[1]))
 
 
-def level_setup(level):
-    for i, row in enumerate(level):
+def level_setup(layout, height):
+    for i, row in enumerate(height):
         for j, block in enumerate(row):
-            row[j] = [row[j], 270 + random.randint(1, 20) * 15 * 5, -15, 0.0]
-            i += 1
+            row[j] = int(row[j])+1
 
-    return level
+    for i, row in enumerate(layout):
+        for j, block in enumerate(row):
+            row[j] = [int(row[j]), 270 + random.randint(1, 20) * 15 * 5, -15, 0.0, height[i][j]]
+
+    return layout
 
 
 def main():
@@ -61,22 +76,19 @@ def main():
     go = False
 
     # levels
-    tutorial = [[1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2],
-                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                [2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                [2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                [2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                [2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                [2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                [2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                [2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]
-    tutorial = level_setup(tutorial)
+    tutorial_type = read_csv("assets/csv/tutorial_type layer.csv")
+    tutorial_height = read_csv("assets/csv/tutorial_height layer.csv")
+    tutorial = level_setup(tutorial_type, tutorial_height)
 
     # assets and objects
     tutorial_tile = pygame.image.load("assets/sprites/tutorial_tile.png").convert()
     tutorial_tile.set_colorkey((255, 255, 255))
+    no_go_tile = pygame.image.load("assets/sprites/no_go_tile.png").convert()
+    no_go_tile.set_colorkey((255, 255, 255))
+    start_tile = pygame.image.load("assets/sprites/start_tile.png").convert()
+    start_tile.set_colorkey((255, 255, 255))
+    end_tile = pygame.image.load("assets/sprites/end_tile.png").convert()
+    end_tile.set_colorkey((255, 255, 255))
 
     # main loop variables
     done = False
@@ -118,23 +130,25 @@ def main():
                             block[1] = 0
                         block[1] -= block[2] * dt
 
-                if int(cell_pos.x) == x and int(cell_pos.y) == y:
+                if int(cell_pos.x) == x and int(cell_pos.y) == y and block[4] == 1:
                     block[3] = -0.2
                     block_pos = pygame.Vector2(x, y)
                 else:
                     block[3] = 0.0
 
                 match block[0]:
+                    case 0:
+                        draw_block(display, x, y, block, start_tile)
                     case 1:
-                        draw_block(display, x, y, block, 1, tutorial_tile)
+                        draw_block(display, x, y, block, end_tile)
                     case 2:
-                        draw_block(display, x, y, block, 2, tutorial_tile)
+                        draw_block(display, x, y, block, tutorial_tile)
                     case 3:
-                        draw_block(display, x, y, block, 3, tutorial_tile)
+                        draw_block(display, x, y, block, no_go_tile)
                     case 4:
-                        draw_block(display, x, y, block, 4, tutorial_tile)
+                        draw_block(display, x, y, block, tutorial_tile)
                     case _:
-                        draw_block(display, x, y, block, block[0], tutorial_tile)
+                        draw_block(display, x, y, block, tutorial_tile)
 
                 x += 1
 
