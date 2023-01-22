@@ -4,6 +4,7 @@ import pygame
 import os
 import csv
 from pygame.locals import *
+from player import Player
 
 pygame.init()
 
@@ -13,6 +14,7 @@ I_VEC = pygame.Vector2(1, 0.5)
 J_VEC = pygame.Vector2(-1, 0.5)
 
 
+# Helper functions
 def read_csv(filename):
     level = []
     with open(os.path.join(filename)) as data:
@@ -24,7 +26,7 @@ def read_csv(filename):
 
 
 def invert_metrix(a, b, c, d):
-    det = 1 / (a*d - b*c)  # determinant
+    det = 1 / (a * d - b * c)  # determinant
 
     return {
         "a": det * d,
@@ -34,7 +36,8 @@ def invert_metrix(a, b, c, d):
     }
 
 
-def to_grid_cords(pos: pygame.Vector2):
+# converts screen pos in to grid pos
+def screen_to_grid(pos: pygame.Vector2):
     a = I_VEC.x * BS / 2
     b = J_VEC.x * BS / 2
     c = I_VEC.y * BS / 2
@@ -51,20 +54,21 @@ def to_grid_cords(pos: pygame.Vector2):
 def draw_block(display, x, y, block, sprite, y_offset=0.0):
     for i in range(block[4]):
         display.blit(sprite, ((x * (I_VEC.x * BS / 2) - BS / 2) + (y * (J_VEC.x * BS / 2)),
-                              (x * (I_VEC.y * BS / 2)) + ((y - i * 1.8 + block[3] + y_offset) * (J_VEC.y * BS / 2)) + block[1]))
+                              (x * (I_VEC.y * BS / 2)) + ((y - i * 1.8 + block[3] + y_offset) * (J_VEC.y * BS / 2)) +
+                              block[1]))
 
 
 def level_setup(layout, height):
     for i, row in enumerate(height):
         for j, block in enumerate(row):
-            row[j] = int(row[j])+1
+            row[j] = int(row[j]) + 1
 
     for i, row in enumerate(layout):
         for j, block in enumerate(row):
             if int(row[j]) == 0:
-                row[j] = [int(row[j]), 270 + random.randint(1, 20) * 15 * 5, -15, 0.0, height[i][j], True]
+                row[j] = [int(row[j]), 270 + 36 * 15 * 5, -25, 0.0, height[i][j], True]
             else:
-                row[j] = [int(row[j]), 270 + random.randint(1, 20) * 15 * 5, -15, 0.0, height[i][j], False]
+                row[j] = [int(row[j]), 270 + random.randint(1, 35) * 15 * 5, -25, 0.0, height[i][j], False]
 
     return layout
 
@@ -76,14 +80,8 @@ def main():
     clock = pygame.time.Clock()
 
     # debug and logic variables
-    go = False
 
-    # levels
-    tutorial_type = read_csv("assets/csv/tutorial_type layer.csv")
-    tutorial_height = read_csv("assets/csv/tutorial_height layer.csv")
-    tutorial = level_setup(tutorial_type, tutorial_height)
-
-    # assets and objects
+    # assets
     tutorial_tile = pygame.image.load("assets/sprites/tutorial_tile.png").convert()
     tutorial_tile.set_colorkey((255, 255, 255))
     no_go_tile = pygame.image.load("assets/sprites/no_go_tile.png").convert()
@@ -93,8 +91,17 @@ def main():
     end_tile = pygame.image.load("assets/sprites/end_tile.png").convert()
     end_tile.set_colorkey((255, 255, 255))
 
-    player_img = pygame.image.load("assets/sprites/player/player_tile.png").convert()
-    player_img.set_colorkey((255, 255, 255))
+    # levels
+    tutorial_type = read_csv("assets/csv/tutorial_type layer.csv")
+    tutorial_height = read_csv("assets/csv/tutorial_height layer.csv")
+    tutorial = level_setup(tutorial_type, tutorial_height)
+
+    # game objects
+    plyr = Player()
+    player_group = pygame.sprite.Group()
+    player_group.add(plyr)
+
+    entity_group = pygame.sprite.Group()
 
     # main loop variables
     done = False
@@ -103,42 +110,34 @@ def main():
     while not done:
 
         keys = pygame.key.get_pressed()  # input handler
-        cell_pos = to_grid_cords(
-            pos=pygame.Vector2(pygame.mouse.get_pos()[0]/ZOOM, pygame.mouse.get_pos()[1]/ZOOM)
+        cell_pos = screen_to_grid(
+            pos=pygame.Vector2(pygame.mouse.get_pos()[0] / ZOOM, pygame.mouse.get_pos()[1] / ZOOM)
         )
-        block_pos = pygame.Vector2(0, 0)
 
         # setting up delta time
         dt = time.perf_counter() - last_time
         dt *= 60
         last_time = time.perf_counter()
 
-        # processing logic
-        if keys[pygame.K_SPACE]:
-            go = True
-
         display.fill((0, 0, 0))
 
         # Drawing to the display
-
-        # drawing the level
         y = -1
-        for row in tutorial:
+        for i, row in enumerate(tutorial):
             x = 12
-            for block in row:
+            for j, block in enumerate(row):
 
-                if go:
-                    if block[1] > 0:
-                        block[1] += block[2] * dt
-                    elif block[1] < 0:
-                        block[2] = block[1] / 10
-                        if block[2] < 1:
-                            block[1] = 0
-                        block[1] -= block[2] * dt
+                if block[1] > 0:
+                    block[1] += block[2] * dt
+                elif block[1] < 0:
+                    block[2] = block[1] / 10
+                    if block[2] > 1:
+                        block[1] = 0
+                    block[1] -= block[2] * dt
+                    block[1] = int(block[1])
 
                 if int(cell_pos.x) == x and int(cell_pos.y) == y and block[4] == 1:
                     block[3] = -0.2
-                    block_pos = pygame.Vector2(x, y)
                 else:
                     block[3] = 0.0
 
@@ -156,8 +155,10 @@ def main():
                     case _:
                         draw_block(display, x, y, block, tutorial_tile)
 
+                # drawing and updating the player
                 if block[5]:
-                    draw_block(display, x, y, block, player_img, -3.2)
+                    plyr.update(dt, x, y, block, tutorial, (i, j), keys)
+                    player_group.draw(display)
 
                 x += 1
 
@@ -173,8 +174,8 @@ def main():
         surf = pygame.transform.scale(display, (window.get_width(), window.get_height()))
         window.blit(surf, (0, 0))
 
-        pygame.display.set_caption(f"{int(cell_pos.x)} : {int(cell_pos.y)} | {block_pos.x} : {block_pos.y}")
-        clock.tick(144)
+        pygame.display.set_caption(f"{int(clock.get_fps())}")
+        clock.tick(60)
 
 
 if __name__ == "__main__":
