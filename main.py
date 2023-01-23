@@ -4,7 +4,6 @@ import pygame
 import os
 import csv
 from pygame.locals import *
-from player import Player
 
 pygame.init()
 
@@ -65,10 +64,7 @@ def level_setup(layout, height):
 
     for i, row in enumerate(layout):
         for j, block in enumerate(row):
-            if int(row[j]) == 0:
-                row[j] = [int(row[j]), 270 + 36 * 15 * 5, -25, 0.0, height[i][j], True]
-            else:
-                row[j] = [int(row[j]), 270 + random.randint(1, 35) * 15 * 5, -25, 0.0, height[i][j], False]
+            row[j] = [int(row[j]), 270 + random.randint(1, 35) * 15 * 5, -25, 0.0, height[i][j]]
 
     return layout
 
@@ -97,9 +93,6 @@ def main():
     tutorial = level_setup(tutorial_type, tutorial_height)
 
     # game objects
-    plyr = Player()
-    player_group = pygame.sprite.Group()
-    player_group.add(plyr)
 
     entity_group = pygame.sprite.Group()
 
@@ -110,6 +103,7 @@ def main():
     while not done:
 
         keys = pygame.key.get_pressed()  # input handler
+        mouse_keys = pygame.mouse.get_pressed()
         cell_pos = screen_to_grid(
             pos=pygame.Vector2(pygame.mouse.get_pos()[0] / ZOOM, pygame.mouse.get_pos()[1] / ZOOM)
         )
@@ -138,6 +132,8 @@ def main():
 
                 if int(cell_pos.x) == x and int(cell_pos.y) == y and block[4] == 1:
                     block[3] = -0.2
+                    if mouse_keys[0]:
+                        block[3] = -4
                 else:
                     block[3] = 0.0
 
@@ -154,11 +150,6 @@ def main():
                         draw_block(display, x, y, block, tutorial_tile)
                     case _:
                         draw_block(display, x, y, block, tutorial_tile)
-
-                # drawing and updating the player
-                if block[5]:
-                    plyr.update(dt, x, y, block, tutorial, (i, j), keys)
-                    player_group.draw(display)
 
                 x += 1
 
